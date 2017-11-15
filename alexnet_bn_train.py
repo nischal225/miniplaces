@@ -5,7 +5,7 @@ from tensorflow.contrib.layers.python.layers import batch_norm
 from DataLoader import *
 
 # Dataset Parameters
-batch_size = 256
+batch_size = 100
 load_size = 256
 fine_size = 224
 c = 3
@@ -14,7 +14,7 @@ data_mean = np.asarray([0.45834960097,0.44674252445,0.41352266842])
 # Training Parameters
 learning_rate = 0.001
 dropout = 0.5 # Dropout, probability to keep units
-training_iters = 50000
+training_iters = 10000
 step_display = 50
 step_save = 10000
 path_save = 'alexnet_bn'
@@ -30,18 +30,31 @@ def batch_norm_layer(x, train_phase, scope_bn):
     
 def alexnet(x, keep_dropout, train_phase):
     weights = {
-        'wc1': tf.Variable(tf.random_normal([11, 11, 3, 96], stddev=np.sqrt(2./(11*11*3)))),
-        'wc2': tf.Variable(tf.random_normal([5, 5, 96, 256], stddev=np.sqrt(2./(5*5*96)))),
-        'wc3': tf.Variable(tf.random_normal([3, 3, 256, 384], stddev=np.sqrt(2./(3*3*256)))),
-        'wc4': tf.Variable(tf.random_normal([3, 3, 384, 256], stddev=np.sqrt(2./(3*3*384)))),
-        'wc5': tf.Variable(tf.random_normal([3, 3, 256, 256], stddev=np.sqrt(2./(3*3*256)))),
+        # 'wc1': tf.Variable(tf.random_normal([11, 11, 3, 96], stddev=np.sqrt(2./(11*11*3)))),
+        # 'wc2': tf.Variable(tf.random_normal([5, 5, 96, 256], stddev=np.sqrt(2./(5*5*96)))),
+        # 'wc3': tf.Variable(tf.random_normal([3, 3, 256, 384], stddev=np.sqrt(2./(3*3*256)))),
+        # 'wc4': tf.Variable(tf.random_normal([3, 3, 384, 256], stddev=np.sqrt(2./(3*3*384)))),
+        # 'wc5': tf.Variable(tf.random_normal([3, 3, 256, 256], stddev=np.sqrt(2./(3*3*256)))),
+		#
+        # 'wf6': tf.Variable(tf.random_normal([7*7*256, 4096], stddev=np.sqrt(2./(7*7*256)))),
+        # 'wf7': tf.Variable(tf.random_normal([4096, 4096], stddev=np.sqrt(2./4096))),
+        # 'wo': tf.Variable(tf.random_normal([4096, 100], stddev=np.sqrt(2./4096)))
 
-        'wf6': tf.Variable(tf.random_normal([7*7*256, 4096], stddev=np.sqrt(2./(7*7*256)))),
-        'wf7': tf.Variable(tf.random_normal([4096, 4096], stddev=np.sqrt(2./4096))),
-        'wo': tf.Variable(tf.random_normal([4096, 100], stddev=np.sqrt(2./4096)))
+        # W = tf.get_variable("W", shape=[784, 256],
+        #                     initializer=tf.contrib.layers.xavier_initializer())
+
+        'wc1': tf.get_variable('wc1', shape=[11, 11, 3, 96], initializer=tf.contrib.layers.xavier_initializer()),
+        'wc2': tf.get_variable('wc2', shape=[5, 5, 96, 256], initializer=tf.contrib.layers.xavier_initializer()),
+        'wc3': tf.get_variable('wc3', shape=[3, 3, 256, 384], initializer=tf.contrib.layers.xavier_initializer()),
+        'wc4': tf.get_variable('wc4', shape=[3, 3, 384, 256], initializer=tf.contrib.layers.xavier_initializer()),
+        'wc5': tf.get_variable('wc5', shape=[3, 3, 256, 256], initializer=tf.contrib.layers.xavier_initializer()),
+
+        'wf6': tf.get_variable('wf6', shape=[7 * 7 * 256, 4096], initializer=tf.contrib.layers.xavier_initializer()),
+        'wf7': tf.get_variable('wf7', shape=[4096, 4096],initializer=tf.contrib.layers.xavier_initializer()),
+        'wo': tf.get_variable('wo',shape=[4096, 100], initializer=tf.contrib.layers.xavier_initializer())
     }
 
-    biases = {
+    biases = {                            
         'bo': tf.Variable(tf.ones(100))
     }
 
