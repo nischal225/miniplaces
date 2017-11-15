@@ -16,7 +16,7 @@ learning_rate = 0.001
 dropout = 0.5 # Dropout, probability to keep units
 training_iters = 10000
 step_display = 50
-step_save = 10000
+step_save = 500
 path_save = 'alexnet_bn'
 start_from = ''
 
@@ -164,7 +164,7 @@ with tf.Session() as sess:
         sess.run(init)
     
     step = 0
-
+    f = open('output_log.txt', 'w')
     while step < training_iters:
         # Load a batch of training data
         images_batch, labels_batch = loader_train.next_batch(batch_size)
@@ -173,19 +173,22 @@ with tf.Session() as sess:
             print('[%s]:' %(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
             # Calculate batch loss and accuracy on training set
-            l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5], feed_dict={x: images_batch, y: labels_batch, keep_dropout: 1., train_phase: False}) 
-            print("-Iter " + str(step) + ", Training Loss= " + \
+            l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5], feed_dict={x: images_batch, y: labels_batch, keep_dropout: 1., train_phase: False})
+            train_string = ("-Iter " + str(step) + ", Training Loss= " + \
                   "{:.6f}".format(l) + ", Accuracy Top1 = " + \
                   "{:.4f}".format(acc1) + ", Top5 = " + \
-                  "{:.4f}".format(acc5))
+                  "{:.4f}".format(acc5) + "\n")
+            f.write(train_string)
+
 
             # Calculate batch loss and accuracy on validation set
             images_batch_val, labels_batch_val = loader_val.next_batch(batch_size)    
             l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5], feed_dict={x: images_batch_val, y: labels_batch_val, keep_dropout: 1., train_phase: False}) 
-            print("-Iter " + str(step) + ", Validation Loss= " + \
-                  "{:.6f}".format(l) + ", Accuracy Top1 = " + \
-                  "{:.4f}".format(acc1) + ", Top5 = " + \
-                  "{:.4f}".format(acc5))
+            validation_string = ("-Iter " + str(step) + ", Validation Loss= " +
+                  "{:.6f}".format(l) + ", Accuracy Top1 = " +
+                  "{:.4f}".format(acc1) + ", Top5 = " +
+                  "{:.4f}".format(acc5) + "\n")
+            f.write(validation_string)
         
         # Run optimization op (backprop)
         sess.run(train_optimizer, feed_dict={x: images_batch, y: labels_batch, keep_dropout: dropout, train_phase: True})
@@ -201,7 +204,9 @@ with tf.Session() as sess:
 
 
     # Evaluate on the whole validation set
-    print('Evaluation on the whole validation set...')
+    string = 'Evaluation on the whole validation set...'
+    f.write(string)
+    print(string)
     num_batch = loader_val.size()//batch_size
     acc1_total = 0.
     acc5_total = 0.
@@ -211,10 +216,14 @@ with tf.Session() as sess:
         acc1, acc5 = sess.run([accuracy1, accuracy5], feed_dict={x: images_batch, y: labels_batch, keep_dropout: 1., train_phase: False})
         acc1_total += acc1
         acc5_total += acc5
-        print("Validation Accuracy Top1 = " + \
-              "{:.4f}".format(acc1) + ", Top5 = " + \
+        string = ("Validation Accuracy Top1 = " +
+              "{:.4f}".format(acc1) + ", Top5 = " +
               "{:.4f}".format(acc5))
+        f.write(string)
+        print(string)
 
     acc1_total /= num_batch
     acc5_total /= num_batch
-    print('Evaluation Finished! Accuracy Top1 = ' + "{:.4f}".format(acc1_total) + ", Top5 = " + "{:.4f}".format(acc5_total))
+    string = 'Evaluation Finished! Accuracy Top1 = ' + "{:.4f}".format(acc1_total) + ", Top5 = " + "{:.4f}".format(acc5_total)
+    f.write(string)
+    print(string)
