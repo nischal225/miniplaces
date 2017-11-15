@@ -178,6 +178,7 @@ with tf.Session() as sess:
                   "{:.6f}".format(l) + ", Accuracy Top1 = " + \
                   "{:.4f}".format(acc1) + ", Top5 = " + \
                   "{:.4f}".format(acc5) + "\n")
+            print(train_string)
             f.write(train_string)
 
 
@@ -188,6 +189,7 @@ with tf.Session() as sess:
                   "{:.6f}".format(l) + ", Accuracy Top1 = " +
                   "{:.4f}".format(acc1) + ", Top5 = " +
                   "{:.4f}".format(acc5) + "\n")
+            print(validation_string)
             f.write(validation_string)
         
         # Run optimization op (backprop)
@@ -201,6 +203,7 @@ with tf.Session() as sess:
             print("Model saved at Iter %d !" %(step))
         
     print("Optimization Finished!")
+    f.write('Optimization Finished')
 
 
     # Evaluate on the whole validation set
