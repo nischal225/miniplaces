@@ -122,114 +122,121 @@ opt_data_val = {
     'randomize': False
     }
 
-loader_train = DataLoaderDisk(**opt_data_train)
-loader_val = DataLoaderDisk(**opt_data_val)
-#loader_train = DataLoaderH5(**opt_data_train)
-#loader_val = DataLoaderH5(**opt_data_val)
 
-# tf Graph input
-x = tf.placeholder(tf.float32, [None, fine_size, fine_size, c])
-y = tf.placeholder(tf.int64, None)
-keep_dropout = tf.placeholder(tf.float32)
-train_phase = tf.placeholder(tf.bool)
+def nn_trainer():
+    loader_train = DataLoaderDisk(**opt_data_train)
+    loader_val = DataLoaderDisk(**opt_data_val)
+    #loader_train = DataLoaderH5(**opt_data_train)
+    #loader_val = DataLoaderH5(**opt_data_val)
 
-# Construct model
-resnet_model = cifar10_resnet_v2_generator(80, 10)
-logits = resnet_model(x, True)
-#logits = alexnet(x, keep_dropout, train_phase)
+    # tf Graph input
+    x = tf.placeholder(tf.float32, [None, fine_size, fine_size, c])
+    y = tf.placeholder(tf.int64, None)
+    keep_dropout = tf.placeholder(tf.float32)
+    train_phase = tf.placeholder(tf.bool)
 
-# Define loss and optimizer
-loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y, logits=logits))
-train_optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
+    # Construct model
+    resnet_model = cifar10_resnet_v2_generator(14, 100)
+    logits = resnet_model(x, True)
+    #logits = alexnet(x, keep_dropout, train_phase)
 
-# Evaluate model
-accuracy1 = tf.reduce_mean(tf.cast(tf.nn.in_top_k(logits, y, 1), tf.float32))
-accuracy5 = tf.reduce_mean(tf.cast(tf.nn.in_top_k(logits, y, 5), tf.float32))
+    # Define loss and optimizer
+    loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y, logits=logits))
+    train_optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
 
-# define initialization
-init = tf.global_variables_initializer()
+    # Evaluate model
+    accuracy1 = tf.reduce_mean(tf.cast(tf.nn.in_top_k(logits, y, 1), tf.float32))
+    accuracy5 = tf.reduce_mean(tf.cast(tf.nn.in_top_k(logits, y, 5), tf.float32))
 
-# define saver
-saver = tf.train.Saver()
+    # define initialization
+    init = tf.global_variables_initializer()
 
-# define summary writer
-#writer = tf.train.SummaryWriter('.', graph=tf.get_default_graph())
+    # define saver
+    saver = tf.train.Saver()
 
-# Launch the graph
-with tf.Session() as sess:
-    # Initialization
-    if len(start_from)>1:
-        saver.restore(sess, start_from)
-    else:
-        sess.run(init)
-    
-    step = 0
-    f = open('output_log.txt', 'w')
-    while step < training_iters:
-        # Load a batch of training data
-        images_batch, labels_batch = loader_train.next_batch(batch_size)
-        
-        if step % step_display == 0:
-            string = '[%s]:' %(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            print(string)
-            f.write(string)
+    # define summary writer
+    #writer = tf.train.SummaryWriter('.', graph=tf.get_default_graph())
 
+    # Launch the graph
+    with tf.Session() as sess:
+        # Initialization
+        if len(start_from)>1:
+            saver.restore(sess, start_from)
+        else:
+            sess.run(init)
 
-            # Calculate batch loss and accuracy on training set
-            l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5], feed_dict={x: images_batch, y: labels_batch, keep_dropout: 1., train_phase: False})
-            train_string = ("-Iter " + str(step) + ", Training Loss= " + \
-                  "{:.6f}".format(l) + ", Accuracy Top1 = " + \
-                  "{:.4f}".format(acc1) + ", Top5 = " + \
-                  "{:.4f}".format(acc5) + "\n")
-            print(train_string)
-            f.write(train_string)
+        step = 0
+        f = open('output_log.txt', 'w')
+        while step < training_iters:
+            # Load a batch of training data
+            images_batch, labels_batch = loader_train.next_batch(batch_size)
+
+            if step % step_display == 0:
+                string = '[%s]:' %(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                print(string)
+                f.write(string)
 
 
-            # Calculate batch loss and accuracy on validation set
-            images_batch_val, labels_batch_val = loader_val.next_batch(batch_size)    
-            l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5], feed_dict={x: images_batch_val, y: labels_batch_val, keep_dropout: 1., train_phase: False}) 
-            validation_string = ("-Iter " + str(step) + ", Validation Loss= " +
-                  "{:.6f}".format(l) + ", Accuracy Top1 = " +
+                # Calculate batch loss and accuracy on training set
+                l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5], feed_dict={x: images_batch, y: labels_batch, keep_dropout: 1., train_phase: False})
+                train_string = ("-Iter " + str(step) + ", Training Loss= " + \
+                      "{:.6f}".format(l) + ", Accuracy Top1 = " + \
+                      "{:.4f}".format(acc1) + ", Top5 = " + \
+                      "{:.4f}".format(acc5) + "\n")
+                print(train_string)
+                f.write(train_string)
+
+
+                # Calculate batch loss and accuracy on validation set
+                images_batch_val, labels_batch_val = loader_val.next_batch(batch_size)
+                l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5], feed_dict={x: images_batch_val, y: labels_batch_val, keep_dropout: 1., train_phase: False})
+                validation_string = ("-Iter " + str(step) + ", Validation Loss= " +
+                      "{:.6f}".format(l) + ", Accuracy Top1 = " +
+                      "{:.4f}".format(acc1) + ", Top5 = " +
+                      "{:.4f}".format(acc5) + "\n")
+                print(validation_string)
+                f.write(validation_string)
+
+            # Run optimization op (backprop)
+            sess.run(train_optimizer, feed_dict={x: images_batch, y: labels_batch, keep_dropout: dropout, train_phase: True})
+
+            step += 1
+
+            # Save model
+            if step % step_save == 0 or step == 1:
+                saver.save(sess, path_save, global_step=step)
+                print("Model saved at Iter %d !" %(step))
+
+        print("Optimization Finished!")
+        f.write('Optimization Finished')
+
+
+        # Evaluate on the whole validation set
+        string = 'Evaluation on the whole validation set...'
+        f.write(string)
+        print(string)
+        num_batch = loader_val.size()//batch_size
+        acc1_total = 0.
+        acc5_total = 0.
+        loader_val.reset()
+        for i in range(num_batch):
+            images_batch, labels_batch = loader_val.next_batch(batch_size)
+            acc1, acc5 = sess.run([accuracy1, accuracy5], feed_dict={x: images_batch, y: labels_batch, keep_dropout: 1., train_phase: False})
+            acc1_total += acc1
+            acc5_total += acc5
+            string = ("Validation Accuracy Top1 = " +
                   "{:.4f}".format(acc1) + ", Top5 = " +
-                  "{:.4f}".format(acc5) + "\n")
-            print(validation_string)
-            f.write(validation_string)
-        
-        # Run optimization op (backprop)
-        sess.run(train_optimizer, feed_dict={x: images_batch, y: labels_batch, keep_dropout: dropout, train_phase: True})
+                  "{:.4f}".format(acc5))
+            f.write(string)
+            print(string)
 
-        step += 1
-        
-        # Save model
-        if step % step_save == 0 or step == 1:
-            saver.save(sess, path_save, global_step=step)
-            print("Model saved at Iter %d !" %(step))
-        
-    print("Optimization Finished!")
-    f.write('Optimization Finished')
-
-
-    # Evaluate on the whole validation set
-    string = 'Evaluation on the whole validation set...'
-    f.write(string)
-    print(string)
-    num_batch = loader_val.size()//batch_size
-    acc1_total = 0.
-    acc5_total = 0.
-    loader_val.reset()
-    for i in range(num_batch):
-        images_batch, labels_batch = loader_val.next_batch(batch_size)    
-        acc1, acc5 = sess.run([accuracy1, accuracy5], feed_dict={x: images_batch, y: labels_batch, keep_dropout: 1., train_phase: False})
-        acc1_total += acc1
-        acc5_total += acc5
-        string = ("Validation Accuracy Top1 = " +
-              "{:.4f}".format(acc1) + ", Top5 = " +
-              "{:.4f}".format(acc5))
+        acc1_total /= num_batch
+        acc5_total /= num_batch
+        string = 'Evaluation Finished! Accuracy Top1 = ' + "{:.4f}".format(acc1_total) + ", Top5 = " + "{:.4f}".format(acc5_total)
         f.write(string)
         print(string)
 
-    acc1_total /= num_batch
-    acc5_total /= num_batch
-    string = 'Evaluation Finished! Accuracy Top1 = ' + "{:.4f}".format(acc1_total) + ", Top5 = " + "{:.4f}".format(acc5_total)
-    f.write(string)
-    print(string)
+
+
+if __name__ == "__main__":
+    nn_trainer()
