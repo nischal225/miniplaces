@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers.python.layers import batch_norm
 from DataLoader import *
+from resnet import cifar10_resnet_v2_generator
 
 # Dataset Parameters
 batch_size = 50
@@ -59,7 +60,7 @@ def alexnet(x, keep_dropout, train_phase):
     }
 
     # Conv + ReLU + Pool, 224->55->27
-    conv1 = tf.nn.conv2d(x, weights['wc1'], strides=[1, 4, 4, 1], padding='SAME')
+    conv1 = tf.nn.conv2d(x, weights['wc1'], strides=[1, 2, 2, 1], padding='SAME')
     conv1 = batch_norm_layer(conv1, train_phase, 'bn1')
     conv1 = tf.nn.relu(conv1)
     pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')
@@ -106,7 +107,7 @@ def alexnet(x, keep_dropout, train_phase):
 
 # Construct dataloader
 opt_data_train = {
- #   'data_h5': 'miniplaces_256_train.h5',
+    #'data_h5': 'miniplaces_256_train.h5',
     'data_root': '../../data/images/',   # MODIFY PATH ACCORDINGLY
     'data_list': '../../data/train.txt', # MODIFY PATH ACCORDINGLY
     'load_size': load_size,
@@ -115,7 +116,7 @@ opt_data_train = {
     'randomize': True
     }
 opt_data_val = {
-#    'data_h5': 'miniplaces_256_val.h5',
+    #'data_h5': 'miniplaces_256_val.h5',
     'data_root': '../../data/images/',   # MODIFY PATH ACCORDINGLY
     'data_list': '../../data/val.txt',   # MODIFY PATH ACCORDINGLY
     'load_size': load_size,
@@ -136,7 +137,9 @@ keep_dropout = tf.placeholder(tf.float32)
 train_phase = tf.placeholder(tf.bool)
 
 # Construct model
-logits = alexnet(x, keep_dropout, train_phase)
+resnet_model = cifar10_resnet_v2_generator(80, 10)
+logits = resnet_model(x, True)
+#logits = alexnet(x, keep_dropout, train_phase)
 
 # Define loss and optimizer
 loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(labels=y, logits=logits))
@@ -170,7 +173,10 @@ with tf.Session() as sess:
         images_batch, labels_batch = loader_train.next_batch(batch_size)
         
         if step % step_display == 0:
-            print('[%s]:' %(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            string = '[%s]:' %(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            print(string)
+            f.write(string)
+
 
             # Calculate batch loss and accuracy on training set
             l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5], feed_dict={x: images_batch, y: labels_batch, keep_dropout: 1., train_phase: False})
@@ -194,11 +200,11 @@ with tf.Session() as sess:
         
         # Run optimization op (backprop)
         sess.run(train_optimizer, feed_dict={x: images_batch, y: labels_batch, keep_dropout: dropout, train_phase: True})
-        
+
         step += 1
         
         # Save model
-        if step % step_save == 0:
+        if step % step_save == 0 or step == 1:
             saver.save(sess, path_save, global_step=step)
             print("Model saved at Iter %d !" %(step))
         
