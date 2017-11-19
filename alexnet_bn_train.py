@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers.python.layers import batch_norm
 from DataLoader import *
-from resnet import cifar10_resnet_v2_generator
+from resnet import *
 
 # Dataset Parameters
 batch_size = 50
@@ -140,8 +140,9 @@ def nn_trainer():
     train_phase = tf.placeholder(tf.bool)
 
     # Construct model
-    resnet_model = cifar10_resnet_v2_generator(14, 100)
-    logits = resnet_model(x, True)
+    # resnet_model = cifar10_resnet_v2_generator(14, 100)
+    resnet_model = imagenet_resnet_v2(18, 100, data_format=None)
+    logits = resnet_model(x, False)
     #logits = alexnet(x, keep_dropout, train_phase)
 
     # Define loss and optimizer
