@@ -194,7 +194,7 @@ def nn_trainer():
 
                 # Calculate batch loss and accuracy on training set
                 l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5], feed_dict={x: augmented_batch, y: labels_batch, keep_dropout: 1., train_phase: False})
-                train_string = ("-Iter " + str(step) + ", Training Loss= " + \
+                train_string = ("-Iter " + str(step) + ", AUGMENTED Training Loss= " + \
                                 "{:.6f}".format(l) + ", Accuracy Top1 = " + \
                                 "{:.4f}".format(acc1) + ", Top5 = " + \
                                 "{:.4f}".format(acc5) + "\n")
