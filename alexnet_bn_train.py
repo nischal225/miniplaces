@@ -175,7 +175,7 @@ def nn_trainer():
         while step < training_iters:
             # Load a batch of training data
             images_batch, labels_batch = loader_train.next_batch(batch_size)
-            augmented_batch = [augment_image(image) for image in images_batch]
+            augmented_batch = np.array([augment_image(image) for image in images_batch]);
 
             if step % step_display == 0:
                 string = '[%s]:' %(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
@@ -193,9 +193,7 @@ def nn_trainer():
                 f.write(train_string)
 
                 # Calculate batch loss and accuracy on training set
-                l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5],
-                                         feed_dict={x: augmented_batch, y: labels_batch, keep_dropout: 1.,
-                                                    train_phase: False})
+                l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5], feed_dict={x: augmented_batch, y: labels_batch, keep_dropout: 1., train_phase: False})
                 train_string = ("-Iter " + str(step) + ", Training Loss= " + \
                                 "{:.6f}".format(l) + ", Accuracy Top1 = " + \
                                 "{:.4f}".format(acc1) + ", Top5 = " + \

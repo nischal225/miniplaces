@@ -8,8 +8,8 @@ from scipy.ndimage.interpolation import zoom
 np.random.seed(123)
 
 
-def augment_image(inp_image):
-	switch = randint(0, 5)
+def augment_image(image):
+	switch = randint(0, 3)
 
 	if switch == 0:
 		blurred_image = ndimage.uniform_filter(image, size=(7, 7, 1))
@@ -28,6 +28,9 @@ def augment_image(inp_image):
 		rotated_image = scipy.ndimage.interpolation.rotate(image, rotation_angle, mode='reflect', reshape=False)
 		#scipy.misc.imsave(os.path.join('./', 'image_trans/rotated.jpg'), rotated_image)
 		return rotated_image
+	else:
+		blurred_image = ndimage.uniform_filter(image, size=(7, 7, 1))
+		return blurred_image
 
 	# elif switch == 4:
 	# 	shifted_amount = choice([randint(5.0, 13.0)])
