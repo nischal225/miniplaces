@@ -44,7 +44,7 @@ def alexnet(x, keep_dropout, train_phase):
         # W = tf.get_variable("W", shape=[784, 256],
         #                     initializer=tf.contrib.layers.xavier_initializer())
 
-        #'wc1': tf.get_variable('wc1', shape=[11, 11, 3, 96], initializer=tf.contrib.layers.xavier_initializer()),
+        #'wc1': tf.get_variable('wc1', shape=[7,7, 3, 96], initializer=tf.contrib.layers.xavier_initializer()),
         #'wc2': tf.get_variable('wc2', shape=[5, 5, 96, 256], initializer=tf.contrib.layers.xavier_initializer()),
         #'wc3': tf.get_variable('wc3', shape=[3, 3, 256, 384], initializer=tf.contrib.layers.xavier_initializer()),
         #'wc4': tf.get_variable('wc4', shape=[3, 3, 384, 256], initializer=tf.contrib.layers.xavier_initializer()),
@@ -66,7 +66,7 @@ def alexnet(x, keep_dropout, train_phase):
     pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')
 
     # Conv + ReLU  + Pool, 27-> 13
-    conv2 = tf.nn.conv2d(pool1, weights['wc2'], strides=[1, 1, 1, 1], padding='SAME')
+    conv2 = tf.nn.conv2d(pool1, weights['wc2'], strides=[1, 2, 2, 1], padding='SAME')
     conv2 = batch_norm_layer(conv2, train_phase, 'bn2')
     conv2 = tf.nn.relu(conv2)
     pool2 = tf.nn.max_pool(conv2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')
@@ -124,7 +124,6 @@ opt_data_val = {
     'data_mean': data_mean,
     'randomize': False
     }
-
 
 def nn_trainer():
     loader_train = DataLoaderDisk(**opt_data_train)
@@ -239,8 +238,6 @@ def nn_trainer():
         string = 'Evaluation Finished! Accuracy Top1 = ' + "{:.4f}".format(acc1_total) + ", Top5 = " + "{:.4f}".format(acc5_total)
         f.write(string)
         print(string)
-
-
 
 if __name__ == "__main__":
     nn_trainer()
