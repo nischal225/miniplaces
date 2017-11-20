@@ -28,11 +28,11 @@ def batch_norm_layer(x, train_phase, scope_bn):
     reuse=None,
     trainable=True,
     scope=scope_bn)
-    
+
 def alexnet(x, keep_dropout, train_phase):
     weights = {
-        'wc1': tf.Variable(tf.random_normal([3, 3, 3, 96], stddev=np.sqrt(2./(11*11*3)))),
-        'wc2': tf.Variable(tf.random_normal([3, 3, 96, 256], stddev=np.sqrt(2./(5*5*96)))),
+        'wc1': tf.Variable(tf.random_normal([7, 7, 3, 96], stddev=np.sqrt(2./(11*11*3)))),
+        'wc2': tf.Variable(tf.random_normal([5, 5, 96, 256], stddev=np.sqrt(2./(5*5*96)))),
         'wc3': tf.Variable(tf.random_normal([3, 3, 256, 384], stddev=np.sqrt(2./(3*3*256)))),
         'wc4': tf.Variable(tf.random_normal([3, 3, 384, 256], stddev=np.sqrt(2./(3*3*384)))),
         'wc5': tf.Variable(tf.random_normal([3, 3, 256, 256], stddev=np.sqrt(2./(3*3*256)))),
@@ -55,7 +55,7 @@ def alexnet(x, keep_dropout, train_phase):
         #'wo': tf.get_variable('wo',shape=[4096, 100], initializer=tf.contrib.layers.xavier_initializer())
     }
 
-    biases = {                            
+    biases = {
         'bo': tf.Variable(tf.ones(100))
     }
 
@@ -93,7 +93,7 @@ def alexnet(x, keep_dropout, train_phase):
     fc6 = batch_norm_layer(fc6, train_phase, 'bn6')
     fc6 = tf.nn.relu(fc6)
     fc6 = tf.nn.dropout(fc6, keep_dropout)
-    
+
     # FC + ReLU + Dropout
     fc7 = tf.matmul(fc6, weights['wf7'])
     fc7 = batch_norm_layer(fc7, train_phase, 'bn7')
@@ -102,7 +102,7 @@ def alexnet(x, keep_dropout, train_phase):
 
     # Output FC
     out = tf.add(tf.matmul(fc7, weights['wo']), biases['bo'])
-    
+
     return out
 
 # Construct dataloader
@@ -141,7 +141,7 @@ def nn_trainer():
     # Construct model
     # resnet_model = cifar10_resnet_v2_generator(14, 100)
     resnet_model = imagenet_resnet_v2(18, 100, data_format=None)
-    logits = resnet_model(x, False)
+    logits = resnet_model(x, True)
     #logits = alexnet(x, keep_dropout, train_phase)
 
     # Define loss and optimizer
