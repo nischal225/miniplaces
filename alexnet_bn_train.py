@@ -4,6 +4,8 @@ import tensorflow as tf
 from tensorflow.contrib.layers.python.layers import batch_norm
 from DataLoader import *
 from resnet import *
+from im_aug import augment_image
+
 
 # Dataset Parameters
 batch_size = 50
@@ -36,7 +38,7 @@ def alexnet(x, keep_dropout, train_phase):
         'wc3': tf.Variable(tf.random_normal([3, 3, 256, 384], stddev=np.sqrt(2./(3*3*256)))),
         'wc4': tf.Variable(tf.random_normal([3, 3, 384, 256], stddev=np.sqrt(2./(3*3*384)))),
         'wc5': tf.Variable(tf.random_normal([3, 3, 256, 256], stddev=np.sqrt(2./(3*3*256)))),
-		#
+        #
         'wf6': tf.Variable(tf.random_normal([7*7*256, 4096], stddev=np.sqrt(2./(7*7*256)))),
         'wf7': tf.Variable(tf.random_normal([4096, 4096], stddev=np.sqrt(2./4096))),
         'wo': tf.Variable(tf.random_normal([4096, 100], stddev=np.sqrt(2./4096)))
@@ -114,7 +116,7 @@ opt_data_train = {
     'fine_size': fine_size,
     'data_mean': data_mean,
     'randomize': True
-    }
+}
 opt_data_val = {
     #'data_h5': 'miniplaces_256_val.h5',
     'data_root': '../../data/images/',   # MODIFY PATH ACCORDINGLY
@@ -173,6 +175,7 @@ def nn_trainer():
         while step < training_iters:
             # Load a batch of training data
             images_batch, labels_batch = loader_train.next_batch(batch_size)
+            augmented_batch = [augment_image(image) for image in images_batch]
 
             if step % step_display == 0:
                 string = '[%s]:' %(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
@@ -189,6 +192,16 @@ def nn_trainer():
                 print(train_string)
                 f.write(train_string)
 
+                # Calculate batch loss and accuracy on training set
+                l, acc1, acc5 = sess.run([loss, accuracy1, accuracy5],
+                                         feed_dict={x: augmented_batch, y: labels_batch, keep_dropout: 1.,
+                                                    train_phase: False})
+                train_string = ("-Iter " + str(step) + ", Training Loss= " + \
+                                "{:.6f}".format(l) + ", Accuracy Top1 = " + \
+                                "{:.4f}".format(acc1) + ", Top5 = " + \
+                                "{:.4f}".format(acc5) + "\n")
+                print(train_string)
+                f.write(train_string)
 
                 # Calculate batch loss and accuracy on validation set
                 images_batch_val, labels_batch_val = loader_val.next_batch(batch_size)
@@ -202,6 +215,7 @@ def nn_trainer():
 
             # Run optimization op (backprop)
             sess.run(train_optimizer, feed_dict={x: images_batch, y: labels_batch, keep_dropout: dropout, train_phase: True})
+            sess.run(train_optimizer, feed_dict={x: augmented_batch, y: labels_batch, keep_dropout: dropout, train_phase: True})
 
             step += 1
 
